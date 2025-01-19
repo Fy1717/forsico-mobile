@@ -1,22 +1,65 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { StatusBar } from 'expo-status-bar';
+import React, { useState } from 'react';
+import { View, Text, TextInput, Button, FlatList, StyleSheet } from 'react-native';
+import axios from 'axios'; // Make sure axios is installed and imported
 
 const HomeScreen = () => {
+    const [inputText, setInputText] = useState('');
+    const [results, setResults] = useState([]);
+
+    const handleAPIRequest = () => {
+        let data = JSON.stringify({
+            "user_content": inputText,
+            "lang": "English",
+            "is_for_subtask": false,
+            "task_id": "2.1",
+            "subtask_assignee": "Development Team"
+        });
+
+        let config = {
+            method: 'post',
+            url: 'https://api.yourdomain.com/process_text',
+            headers: { 
+                'Content-Type': 'application/json'
+            },
+            data: data
+        };
+
+        axios.request(config)
+        .then((response) => {
+            setResults(response.data.result); // Assuming response.data.result is the array to be displayed
+        })
+        .catch((error) => {
+            console.error(error);
+        });
+    };
+
     return (
         <View style={styles.container}>
-            <StatusBar style="auto" />
-            
-            <Text style={styles.welcomeText}>Welcome to the Home Screen!</Text>
-            <Text style={styles.greetingText}>HELLO FORSICO</Text>
-            
-            <View style={styles.subContainer}>
-                <Text style={styles.textStyle}>Furkan</Text>
-            </View>
-
-            <TouchableOpacity style={styles.button} onPress={() => alert('Button Clicked!')}>
-                <Text style={styles.buttonText}>Click Me!</Text>
-            </TouchableOpacity>
+            <TextInput
+                style={styles.input}
+                placeholder="Enter your text"
+                value={inputText}
+                onChangeText={setInputText}
+            />
+            <Button
+                title="Submit"
+                onPress={handleAPIRequest}
+            />
+            <FlatList
+                data={results}
+                keyExtractor={(item) => item.id ? item.id.toString() : 'unknown'}
+                renderItem={({ item }) => {
+                    // Ensure all properties are present and fallback to default values if not
+                    const { id = 'N/A', title = 'No Title', description = 'No Description', assignee = 'Unassigned' } = item;
+                    return (
+                        <View style={styles.itemContainer}>
+                            <Text style={styles.title}>{title}</Text>
+                            <Text>{description}</Text>
+                            <Text>{assignee}</Text>
+                        </View>
+                    );
+                }}
+            />
         </View>
     );
 };
@@ -24,43 +67,24 @@ const HomeScreen = () => {
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        backgroundColor: '#fff',
-        alignItems: 'center',
-        justifyContent: 'center',
         padding: 20,
+        backgroundColor: '#fff',
     },
-    welcomeText: {
-        fontSize: 24,
-        fontWeight: 'bold',
-        color: '#333',
-        marginBottom: 10,
-    },
-    greetingText: {
-        fontSize: 18,
-        color: '#555',
+    input: {
+        height: 40,
+        borderColor: 'gray',
+        borderWidth: 1,
         marginBottom: 20,
+        paddingHorizontal: 10,
     },
-    subContainer: {
-        backgroundColor: 'yellow',
-        width: '80%',  // Increased width for better visibility
-        height: 100,    // Fixed height for consistent design
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderRadius: 50,
-        marginBottom: 20,
-    },
-    textStyle: {
-        fontSize: 20,
-        color: 'red',
-    },
-    button: {
-        backgroundColor: 'blue',
+    itemContainer: {
         padding: 10,
-        borderRadius: 20,
+        borderBottomWidth: 1,
+        borderBottomColor: '#ccc',
     },
-    buttonText: {
-        color: 'white',
-        fontSize: 16,
+    title: {
+        fontSize: 18,
+        fontWeight: 'bold',
     }
 });
 
